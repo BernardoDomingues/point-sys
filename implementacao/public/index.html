@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Mérito Acadêmico</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h1>Sistema de Mérito Acadêmico</h1>
+                </div>
+                <nav class="nav" id="nav">
+                    <a href="#" class="nav-link" data-section="login">Login</a>
+                    <a href="#" class="nav-link" data-section="register">Cadastro</a>
+                    <a href="#" class="nav-link" data-section="dashboard" style="display: none;">Dashboard</a>
+                    <button class="btn-logout" id="logoutBtn" style="display: none;">Sair</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Login Section -->
+                <section id="login-section" class="section active">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="loginForm">
+                                <div class="form-group">
+                                    <label for="loginEmail">Email:</label>
+                                    <input type="email" id="loginEmail" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">Senha:</label>
+                                    <input type="password" id="loginPassword" name="password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-sign-in-alt"></i> Entrar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Register Section -->
+                <section id="register-section" class="section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-user-plus"></i> Cadastro de Aluno</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="registerForm">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="regName">Nome Completo:</label>
+                                        <input type="text" id="regName" name="name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="regEmail">Email:</label>
+                                        <input type="email" id="regEmail" name="email" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="regPassword">Senha:</label>
+                                        <input type="password" id="regPassword" name="password" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="regCpf">CPF:</label>
+                                        <input type="text" id="regCpf" name="cpf" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="regRg">RG:</label>
+                                        <input type="text" id="regRg" name="rg">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="regCourse">Curso:</label>
+                                        <input type="text" id="regCourse" name="course">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regAddress">Endereço:</label>
+                                    <input type="text" id="regAddress" name="address">
+                                </div>
+                                <div class="form-group">
+                                    <label for="regInstitution">Instituição:</label>
+                                    <select id="regInstitution" name="institution_id" required>
+                                        <option value="">Selecione uma instituição</option>
+                                        <option value="1">Universidade Federal de Tecnologia</option>
+                                        <option value="2">Instituto Tecnológico Nacional</option>
+                                        <option value="3">Faculdade de Ciências Aplicadas</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-user-plus"></i> Cadastrar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dashboard Section -->
+                <section id="dashboard-section" class="section">
+                    <div class="dashboard-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                        <div class="user-info" id="userInfo"></div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <!-- Balance Card -->
+                        <div class="card balance-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-coins"></i> Saldo de Moedas</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="balance-amount" id="balanceAmount">0</div>
+                                <div class="balance-label">moedas disponíveis</div>
+                            </div>
+                        </div>
+
+                        <!-- Send Coins Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-paper-plane"></i> Enviar Moedas</h3>
+                            </div>
+                            <div class="card-body">
+                                <form id="sendCoinsForm">
+                                    <div class="form-group">
+                                        <label for="sendEmail">Email do Destinatário:</label>
+                                        <input type="email" id="sendEmail" name="to_email" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sendAmount">Quantidade:</label>
+                                        <input type="number" id="sendAmount" name="amount" min="1" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sendReason">Motivo:</label>
+                                        <textarea id="sendReason" name="reason" rows="3" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i> Enviar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Transactions Card -->
+                        <div class="card transactions-card">
+                            <div class="card-header">
+                                <h3><i class="fas fa-history"></i> Histórico de Transações</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="transactions-list" id="transactionsList">
+                                    <div class="no-transactions">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>Nenhuma transação encontrada</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Carregando...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toastContainer" class="toast-container"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
