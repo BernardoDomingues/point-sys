@@ -1,7 +1,20 @@
 // Sistema de Mérito Acadêmico - Frontend JavaScript
 class AcademicMeritApp {
     constructor() {
-        this.apiBase = '/api';
+        // Detectar se está rodando em desenvolvimento ou produção
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isFileProtocol = window.location.protocol === 'file:';
+        
+        // Se estiver usando file:// protocol, usar localhost
+        if (isFileProtocol || isLocalhost) {
+            this.apiBase = 'http://localhost:3000/api';
+        } else {
+            this.apiBase = '/api';
+        }
+        
+        console.log('API Base URL:', this.apiBase);
+        console.log('Current location:', window.location.href);
+        
         this.token = localStorage.getItem('token');
         this.currentUser = null;
         
@@ -10,6 +23,7 @@ class AcademicMeritApp {
 
     init() {
         this.setupEventListeners();
+        this.testCors();
         this.checkAuth();
     }
 
@@ -43,6 +57,21 @@ class AcademicMeritApp {
             e.preventDefault();
             this.handleSendCoins(e);
         });
+    }
+
+    async testCors() {
+        try {
+            console.log('Testando CORS...');
+            const response = await this.apiCall('/test-cors', 'GET');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('CORS funcionando:', data);
+            } else {
+                console.error('Erro no teste de CORS:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error('Erro no teste de CORS:', error);
+        }
     }
 
     async checkAuth() {
@@ -253,7 +282,25 @@ class AcademicMeritApp {
             options.body = JSON.stringify(data);
         }
 
-        return fetch(url, options);
+        console.log('Making API call:', {
+            url: url,
+            method: method,
+            headers: options.headers,
+            body: options.body
+        });
+
+        try {
+            const response = await fetch(url, options);
+            console.log('API Response:', {
+                status: response.status,
+                statusText: response.statusText,
+                url: response.url
+            });
+            return response;
+        } catch (error) {
+            console.error('API Call Error:', error);
+            throw error;
+        }
     }
 
     showLoading(show) {
