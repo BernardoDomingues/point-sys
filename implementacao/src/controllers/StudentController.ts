@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Student } from '../models/Student';
 import { User } from '../models/User';
 import bcrypt from 'bcryptjs';
-import { CPF } from 'cpf-cnpj-validator';
+import { cpf as CPF } from 'cpf-cnpj-validator';
 
 export class StudentController {
   private studentModel = new Student();
@@ -52,7 +52,11 @@ export class StudentController {
 
       const user = await this.userModel.create(userData);
 
-      // Criar aluno
+      if (!user || !user.id) {
+        res.status(500).json({ error: 'Erro ao criar usuário' });
+        return;
+      }
+
       const studentData = {
         user_id: user.id,
         name,

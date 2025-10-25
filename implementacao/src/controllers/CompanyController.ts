@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Company } from '../models/Company';
 import { User } from '../models/User';
 import bcrypt from 'bcryptjs';
-import { CNPJ } from 'cpf-cnpj-validator';
+import { cnpj as CNPJ } from 'cpf-cnpj-validator';
 
 export class CompanyController {
   private companyModel = new Company();

@@ -39,16 +39,31 @@ export class Company {
           if (err) {
             reject(err);
           } else {
-            const findStmt = this.db.prepare('SELECT * FROM companies WHERE id = ?');
-            findStmt.get(this.lastID, (err, row) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(row as ICompany);
-              }
-            });
+            if (!this.lastID) {
+              const findStmt = this.db.prepare('SELECT * FROM companies WHERE user_id = ?');
+              findStmt.get(companyData.user_id, (err, row) => {
+                if (err) {
+                  reject(err);
+                } else if (!row) {
+                  reject(new Error('Company not found after insert'));
+                } else {
+                  resolve(row as ICompany);
+                }
+              });
+            } else {
+              const findStmt = this.db.prepare('SELECT * FROM companies WHERE id = ?');
+              findStmt.get(this.lastID, (err, row) => {
+                if (err) {
+                  reject(err);
+                } else if (!row) {
+                  reject(new Error('Company not found after insert'));
+                } else {
+                  resolve(row as ICompany);
+                }
+              });
+            }
           }
-        }
+        }.bind(this)
       );
     });
   }

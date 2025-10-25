@@ -4,11 +4,18 @@ import path from 'path';
 export class DatabaseManager {
   private db: sqlite3.Database;
   private static instance: DatabaseManager;
+  private isInitialized: boolean = false;
 
   private constructor() {
-    this.db = new sqlite3.Database(':memory:');
-    this.initTables();
-    this.seedData();
+    this.db = new sqlite3.Database(':memory:', (err) => {
+      if (err) {
+        console.error('Erro ao conectar com o banco:', err);
+      } else {
+        console.log('Conexão com SQLite estabelecida');
+        this.initTables();
+        this.seedData();
+      }
+    });
   }
 
   public static getInstance(): DatabaseManager {
@@ -21,8 +28,7 @@ export class DatabaseManager {
   private initTables(): void {
     console.log('Inicializando tabelas do banco de dados...');
 
-    this.db.serialize(() => {
-      this.db.exec(`
+    const createTablesSQL = `
       CREATE TABLE IF NOT EXISTS institutions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
@@ -67,8 +73,14 @@ export class DatabaseManager {
         user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         cnpj TEXT UNIQUE NOT NULL,
+        description TEXT,
         address TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        phone TEXT,
+        email TEXT,
+        website TEXT,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
 
       CREATE TABLE IF NOT EXISTS transactions (
@@ -101,34 +113,69 @@ export class DatabaseManager {
         status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'cancelled')),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
-      `);
+    `;
 
-      console.log('Tabelas criadas com sucesso!');
+    this.db.exec(createTablesSQL, (err) => {
+      if (err) {
+        console.error('Erro ao criar tabelas:', err);
+      } else {
+        console.log('Tabelas criadas com sucesso!');
+        this.isInitialized = true;
+      }
     });
   }
 
   private seedData(): void {
     console.log('Inserindo dados iniciais...');
 
-    this.db.serialize(() => {
-      this.db.exec(`
-        INSERT OR IGNORE INTO institutions (name, address) VALUES 
-        ('Universidade Federal de Tecnologia', 'Rua da Universidade, 123'),
-        ('Instituto Tecnológico Nacional', 'Av. Tecnologia, 456'),
-        ('Faculdade de Ciências Aplicadas', 'Rua das Ciências, 789');
-      `);
+    const institutionsSQL = `
+      INSERT OR IGNORE INTO institutions (name, address) VALUES 
+      ('Universidade Federal de Tecnologia', 'Rua da Universidade, 123'),
+      ('Instituto Tecnológico Nacional', 'Av. Tecnologia, 456'),
+      ('Faculdade de Ciências Aplicadas', 'Rua das Ciências, 789');
+    `;
 
-      this.db.exec(`
-        INSERT OR IGNORE INTO users (email, password, type) VALUES 
-        ('admin@test.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
-      `);
+    const usersSQL = `
+      INSERT OR IGNORE INTO users (email, password, type) VALUES 
+      ('admin@test.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+    `;
 
-      console.log('Dados iniciais inseridos!');
+    this.db.exec(institutionsSQL, (err) => {
+      if (err) {
+        console.error('Erro ao inserir instituições:', err);
+      } else {
+        console.log('Instituições inseridas com sucesso!');
+      }
+    });
+
+    this.db.exec(usersSQL, (err) => {
+      if (err) {
+        console.error('Erro ao inserir usuário admin:', err);
+      } else {
+        console.log('Dados iniciais inseridos!');
+      }
     });
   }
 
   public getDb(): sqlite3.Database {
     return this.db;
+  }
+
+  public isDbInitialized(): boolean {
+    return this.isInitialized;
+  }
+
+  public async waitForInitialization(): Promise<void> {
+    return new Promise((resolve) => {
+      const checkInitialization = () => {
+        if (this.isInitialized) {
+          resolve();
+        } else {
+          setTimeout(checkInitialization, 100);
+        }
+      };
+      checkInitialization();
+    });
   }
 
   public close(): void {

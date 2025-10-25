@@ -11,9 +11,22 @@ export interface IUser {
 }
 
 export class User {
-  private db = DatabaseManager.getInstance().getDb();
+  private db: any;
+  private dbManager: DatabaseManager;
+
+  constructor() {
+    this.dbManager = DatabaseManager.getInstance();
+    this.db = this.dbManager.getDb();
+  }
+
+  private async ensureDbInitialized(): Promise<void> {
+    if (!this.dbManager.isDbInitialized()) {
+      await this.dbManager.waitForInitialization();
+    }
+  }
 
   public async create(userData: Omit<IUser, 'id' | 'created_at' | 'updated_at'>): Promise<IUser> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const stmt = this.db.prepare(`
         INSERT INTO users (email, password, type, is_active)
@@ -24,20 +37,36 @@ export class User {
         if (err) {
           reject(err);
         } else {
-          const findStmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
-          findStmt.get(this.lastID, (err, row) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(row as IUser);
-            }
-          });
+          if (!this.lastID) {
+            const findStmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
+            findStmt.get(userData.email, (err, row) => {
+              if (err) {
+                reject(err);
+              } else if (!row) {
+                reject(new Error('User not found after insert'));
+              } else {
+                resolve(row as IUser);
+              }
+            });
+          } else {
+            const findStmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
+            findStmt.get(this.lastID, (err, row) => {
+              if (err) {
+                reject(err);
+              } else if (!row) {
+                reject(new Error('User not found after insert'));
+              } else {
+                resolve(row as IUser);
+              }
+            });
+          }
         }
-      });
+      }.bind(this));
     });
   }
 
-  public findById(id: number): Promise<IUser | null> {
+  public async findById(id: number): Promise<IUser | null> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
       stmt.get(id, (err, row) => {
@@ -50,7 +79,8 @@ export class User {
     });
   }
 
-  public findByEmail(email: string): Promise<IUser | null> {
+  public async findByEmail(email: string): Promise<IUser | null> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const stmt = this.db.prepare('SELECT * FROM users WHERE email = ?');
       stmt.get(email, (err, row) => {
@@ -63,7 +93,8 @@ export class User {
     });
   }
 
-  public findAll(): Promise<IUser[]> {
+  public async findAll(): Promise<IUser[]> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const stmt = this.db.prepare('SELECT * FROM users ORDER BY created_at DESC');
       stmt.all((err, rows) => {
@@ -76,7 +107,8 @@ export class User {
     });
   }
 
-  public update(id: number, userData: Partial<IUser>): Promise<boolean> {
+  public async update(id: number, userData: Partial<IUser>): Promise<boolean> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const fields = Object.keys(userData).filter(key => key !== 'id');
       const setClause = fields.map(field => `${field} = ?`).join(', ');
@@ -93,7 +125,8 @@ export class User {
     });
   }
 
-  public delete(id: number): Promise<boolean> {
+  public async delete(id: number): Promise<boolean> {
+    await this.ensureDbInitialized();
     return new Promise((resolve, reject) => {
       const stmt = this.db.prepare('DELETE FROM users WHERE id = ?');
       stmt.run(id, function(err) {

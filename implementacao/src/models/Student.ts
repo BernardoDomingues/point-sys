@@ -34,16 +34,31 @@ export class Student {
           if (err) {
             reject(err);
           } else {
-            const findStmt = this.db.prepare('SELECT * FROM students WHERE id = ?');
-            findStmt.get(this.lastID, (err, row) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(row as IStudent);
-              }
-            });
+            if (!this.lastID) {
+              const findStmt = this.db.prepare('SELECT * FROM students WHERE user_id = ?');
+              findStmt.get(studentData.user_id, (err, row) => {
+                if (err) {
+                  reject(err);
+                } else if (!row) {
+                  reject(new Error('Student not found after insert'));
+                } else {
+                  resolve(row as IStudent);
+                }
+              });
+            } else {
+              const findStmt = this.db.prepare('SELECT * FROM students WHERE id = ?');
+              findStmt.get(this.lastID, (err, row) => {
+                if (err) {
+                  reject(err);
+                } else if (!row) {
+                  reject(new Error('Student not found after insert'));
+                } else {
+                  resolve(row as IStudent);
+                }
+              });
+            }
           }
-        }
+        }.bind(this)
       );
     });
   }
